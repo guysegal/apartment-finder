@@ -1,4 +1,7 @@
 const os = require('os');
+const moment = require('moment');
+
+const SEPARATOR = '<br/>====================================<br/><br/>';
 
 class Stats {
     constructor() {
@@ -16,9 +19,12 @@ class Stats {
     }
 
     toHtml() {
-        return Array.from(this.stats.entries())
+        const date = moment().format('HH:mm:ss DD/MM/YY');
+        const metrics = Array.from(this.stats.entries())
             .map(([key, value]) => `${key}: ${value}`)
             .join('<br />');
+        
+        return `<u>${date}</u><br/>${metrics}${SEPARATOR}`
     }
 
     toString() {
