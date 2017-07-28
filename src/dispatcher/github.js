@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const config = require('../nconf').get('dispatcher').github;
 const GithubApi = require('github');
 const path = require('path');
@@ -19,8 +20,8 @@ function createIssue(owner, repo, title, body, labels) {
 
 function dispatch(ad) {
     const rendered = render(ad, 'markdown');
-    const labels = (config.labels || []).concat(ad.matchingAreas || []);
-
+    const labels = _.compact([].concat(config.labels, ad.tags));
+    
     return createIssue(config.repoOwner, config.repoName, rendered.title, rendered.body, labels).catch(err =>
         console.error(err)
     );

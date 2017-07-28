@@ -15,14 +15,28 @@ const query = require('../config/query');
 
 const log = message => console.log('[' + moment().format('HH:mm') + '] ' + message);
 
-function addMatchingAreas(ad) {
+function filterByAndAddMatchingAreas(ad) {
     const matchingAreas = _.chain(query.areas)
         .defaultTo([])
         .filter(area => geolib.isPointInside(ad.coordinates, area.points))
         .flatMap(area => area.labels)
         .value();
     
-    ad.setMatchingAreas(matchingAreas);
+    ad.addTags(...matchingAreas);
+
+    return matchingAreas.length > 0;
+}
+
+function filterByAndAddMatchingDate(ad) {
+    const isInstantEntrance = !ad.isEntranceKnown;
+    const isBeforeMaximalEntrance = (ad.isEntranceKnown && ad.entrance <= query.maximumEntranceDate);
+    const isAfterMinimalEntrance =  (ad.isEntranceKnown && ad.entrance >= query.minimalEntranceDate);
+    
+    if (isInstantEntrance) {
+        ad.addTags('מיידית')
+    }
+
+    return isInstantEntrance || (isBeforeMaximalEntrance && isAfterMinimalEntrance);
 }
 
 const processAds = co.wrap(function*() {
@@ -39,17 +53,14 @@ const processAds = co.wrap(function*() {
             .forEach(ad => summary.increment('not_already_handled'))
             .filter(ad => ad.coordinates.latitude && ad.coordinates.longitude)
             .forEach(ad => summary.increment('has_coordinates'))
-            .forEach(ad => addMatchingAreas(ad))
-            .filter(ad => ad.matchingAreas.length > 0)
+            .filter(ad => filterByAndAddMatchingAreas(ad))
             .forEach(ad => summary.increment('within_polygon'))
             .map(ad => fetcher.fetchAd(ad).then(extraAdData => new EnhancedAd(ad, extraAdData)))
             .value();
 
         yield _.chain(enhancedAds)
-            .filter(ad => ad.isEntranceKnown) // If you want instant entrance you need to comment this and the next two lines
-            .forEach(ad => summary.increment('has_known_entrance_date'))
-            .filter(ad => ad.entrance >= query.minimumEntranceDate)
-            .forEach(ad => summary.increment('after_minimal_entrance_date'))
+            .filter(ad => filterByAndAddMatchingDate(ad))
+            .forEach(ad => summary.increment('has_matching_entrance_date'))
             .map(ad => 
                 dispatcher(ad).then(() => {
                     adsRepository.updateSent(ad.id);

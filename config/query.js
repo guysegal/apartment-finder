@@ -27,7 +27,8 @@ module.exports = {
             ],
         },
     ],
-    minimumEntranceDate: parseIsraelDate('15/08/2017'),
+    minimalEntranceDate: parseIsraelDate('01/08/2017'),
+    maximumEntranceDate: parseIsraelDate('01/09/2017'),
     apartment: {
         cat: 2,
         subcat: 2,

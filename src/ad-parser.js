@@ -74,6 +74,10 @@ class EnhancedAd {
         this.adNumber = _.get(apiResponse, 'data.ad_number', 'unknown');
         this.url = _.get(apiResponse, 'data.canonical_url');
     }
+
+    addTags(...tags) {
+        this.tags = this.tags.concat(tags);
+    }
 }
 
 class BasicAd {
@@ -86,11 +90,11 @@ class BasicAd {
         this.id = apiResponse.id;
         this.url = `http://yad2.co.il/s/c/${apiResponse.link_token}`;
         this.merchant = apiResponse.merchant === true;
-        this.matchingAreas = [];
+        this.tags = [];
     }
 
-    setMatchingAreas(areas) {
-        this.matchingAreas = areas;
+    addTags(...tags) {
+        this.tags = this.tags.concat(tags);
     }
 }
 
