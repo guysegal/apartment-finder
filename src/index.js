@@ -57,6 +57,8 @@ const processAds = co.wrap(function*() {
         const enhancedAds = yield _.chain(ads)
             .filter(ad => !adsRepository.wasAlreadySent(ad.id))
             .forEach(ad => summary.increment('not_already_handled'))
+            .filter(ad => ad.publishDate >= query.minimumPublishDate)
+            .forEach(ad => summary.increment('after_minimum_publish_date'))
             .filter(ad => ad.coordinates.latitude && ad.coordinates.longitude)
             .forEach(ad => summary.increment('has_coordinates'))
             .filter(ad => filterByAndAddMatchingAreas(ad))

@@ -65,6 +65,7 @@ module.exports = {
             ],
         },
     ],
+    minimumPublishDate: parseIsraelDate('06/07/2017'),
     minimalEntranceDate: parseIsraelDate('01/08/2017'),
     maximumEntranceDate: parseIsraelDate('01/09/2017'),
     apartment: {

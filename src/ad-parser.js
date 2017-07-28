@@ -91,6 +91,7 @@ class BasicAd {
         this.url = `http://yad2.co.il/s/c/${apiResponse.link_token}`;
         this.merchant = apiResponse.merchant === true;
         this.tags = [];
+        this.publishDate = moment(apiResponse.date, 'YYYY-MM-DD HH:mm:ss');
     }
 
     addTags(...tags) {
