@@ -39,6 +39,12 @@ function filterByAndAddMatchingDate(ad) {
     return isInstantEntrance || (isBeforeMaximalEntrance && isAfterMinimalEntrance);
 }
 
+function addRealtyTagsIfNeeded(ad) {
+    if (ad.merchant) {
+        ad.addTags('תיווך')
+    }
+}
+
 const processAds = co.wrap(function*() {
     const summary = new Stats();
 
@@ -55,6 +61,7 @@ const processAds = co.wrap(function*() {
             .forEach(ad => summary.increment('has_coordinates'))
             .filter(ad => filterByAndAddMatchingAreas(ad))
             .forEach(ad => summary.increment('within_polygon'))
+            .forEach(ad => addRealtyTagsIfNeeded(ad))
             .map(ad => fetcher.fetchAd(ad).then(extraAdData => new EnhancedAd(ad, extraAdData)))
             .value();
 
