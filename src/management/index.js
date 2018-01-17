@@ -8,7 +8,7 @@ app.get('/', (req, res) => {
     res.send(stats);
 });
 
-app.listen(80, () => console.log('Started listening on port 80'));
+app.listen(5000, () => console.log('Started listening on port 5000'));
 
 module.exports = {
     updateStats(newStats) {

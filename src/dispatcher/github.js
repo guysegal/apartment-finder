@@ -7,6 +7,7 @@ const github = new GithubApi();
 
 function createIssue(owner, repo, title, body, labels) {
     github.authenticate(config.authentication);
+    console.warn("creating issue")    
 
     return github.issues.create({
         owner,

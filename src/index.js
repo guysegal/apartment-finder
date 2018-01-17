@@ -18,7 +18,10 @@ const log = message => console.log('[' + moment().format('HH:mm') + '] ' + messa
 function addMatchingAreas(ad) {
     const matchingAreas = _.chain(query.areas)
         .defaultTo([])
-        .filter(area => geolib.isPointInside(ad.coordinates, area.points))
+        .filter(area => {
+            var x = geolib.isPointInside(ad.coordinates, area.points)
+            return x;            
+        })
         .flatMap(area => area.labels)
         .value();
     
@@ -40,16 +43,19 @@ const processAds = co.wrap(function*() {
             .filter(ad => ad.coordinates.latitude && ad.coordinates.longitude)
             .forEach(ad => summary.increment('has_coordinates'))
             .forEach(ad => addMatchingAreas(ad))
-            .filter(ad => ad.matchingAreas.length > 0)
+            .filter(ad => {
+                //console.log("matrching areas", ad.matchingAreas.length)
+                return ad.matchingAreas.length > 0
+            })
             .forEach(ad => summary.increment('within_polygon'))
             .map(ad => fetcher.fetchAd(ad).then(extraAdData => new EnhancedAd(ad, extraAdData)))
             .value();
 
         yield _.chain(enhancedAds)
-            .filter(ad => ad.isEntranceKnown) // If you want instant entrance you need to comment this and the next two lines
-            .forEach(ad => summary.increment('has_known_entrance_date'))
-            .filter(ad => ad.entrance >= query.minimumEntranceDate)
-            .forEach(ad => summary.increment('after_minimal_entrance_date'))
+            //.filter(ad => ad.isEntranceKnown) // If you want instant entrance you need to comment this and the next two lines
+            //.forEach(ad => summary.increment('has_known_entrance_date'))
+            //.filter(ad => ad.entrance >= query.minimumEntranceDate)
+            //.forEach(ad => summary.increment('after_minimal_entrance_date'))
             .map(ad => 
                 dispatcher(ad).then(() => {
                     adsRepository.updateSent(ad.id);
@@ -68,15 +74,33 @@ const processAds = co.wrap(function*() {
 
     let currentPage = 1;
     while (true) {
+        const failedPages = [];
         try {
-            const result = yield processPage(currentPage++);
+            const result = yield processPage(currentPage);
+            log("page " + currentPage + " was processed sucessfully")
+            currentPage = currentPage + 1;            
 
             if (result.done) {
                 break;
             }
         } catch (error) {
-            log(error);
+            failedPages.push(currentPage)
+            log("failed processing page " + currentPage - " will try one more time")            
         }
+    }
+
+    for (const page in failedPages) {
+        try {
+            const result = yield processPage(currentPage);
+            currentPage = currentPage + 1;
+            log("page " + currentPage + " was processed sucessfully")
+
+            if (result.done) {
+                break;
+            }
+        } catch (error) {
+            log("failed processing page " + currentPage + " for the second time")            
+        }        
     }
 
     log('Done with run!');
